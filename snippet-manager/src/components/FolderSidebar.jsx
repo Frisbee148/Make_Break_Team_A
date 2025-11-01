@@ -1,54 +1,95 @@
-import React, { useState } from 'react';
-// Import the icons for the new action bar
-import { IoMdAdd } from "react-icons/io";
-import { MdOutlineFileUpload, MdCreateNewFolder } from "react-icons/md";
+import React, { useState, useEffect } from 'react';
+// Use the new server API
+import { getFolders, getSnippets } from '../api/serverApi';
+import { FaFileCode, FaFolder, FaPlus } from 'react-icons/fa';
+import NewSnippetForm from './NewSnippetForm';
+import NewFolderForm from './NewFolderForm'; // We will create this
 
-const FolderSidebar = () => {
-  // Mock data for the file tree
-  const [tree, setTree] = useState([
-    { id: 'f1', type: 'folder', name: 'src', children: [
-      { id: 'f2', type: 'folder', name: 'components', children: [
-        { id: 's1', type: 'snippet', name: 'Button.js' },
-        { id: 's2', type: 'snippet', name: 'Modal.js' },
-      ]},
-      { id: 'f3', type: 'folder', name: 'hooks', children: [
-        { id: 's3', type: 'snippet', name: 'useDebounce.js' },
-      ]},
-    ]},
-    { id: 's4', type: 'snippet', name: 'Dockerfile' },
-  ]);
+const FolderSidebar = ({ spaceId, onSelectSnippet, openModal, refreshKey }) => {
+  const [folders, setFolders] = useState([]);
+  const [snippets, setSnippets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // This will manage the current folder. For now, it's null (top-level)
+  const [currentFolderId, setCurrentFolderId] = useState(null);
 
-  // Placeholder functions for the new buttons
-  const handleNewSnippet = () => alert("Opening new snippet...");
-  const handleNewFolder = () => alert("Creating new folder...");
-  const handleFileUpload = () => alert("Opening file upload...");
+  useEffect(() => {
+    if (spaceId) {
+      setLoading(true);
+      // Fetch based on current space AND folder
+      const folderPromise = getFolders(spaceId, currentFolderId);
+      const snippetPromise = getSnippets(spaceId, currentFolderId);
 
-  // A simple function to render the tree (you'll make this more complex later)
-  const renderTree = (nodes) => (
-    <ul style={{ listStyle: 'none', paddingLeft: '15px' }}>
-      {nodes.map(node => (
-        <li key={node.id}>
-          {node.type === 'folder' ? '📁' : '📄'} {node.name}
-          {node.children && renderTree(node.children)}
-        </li>
-      ))}
-    </ul>
-  );
+      Promise.all([folderPromise, snippetPromise])
+        .then(([folderData, snippetData]) => {
+          setFolders(folderData);
+          setSnippets(snippetData);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Error fetching items:", err);
+          setLoading(false);
+        });
+    }
+  }, [spaceId, currentFolderId, refreshKey]); // Refresh on key change
+
+  const handleNewSnippet = () => {
+    openModal(
+      <NewSnippetForm 
+        spaceId={spaceId} 
+        folderId={currentFolderId} 
+      />
+    );
+  };
+  
+  const handleNewFolder = () => {
+    openModal(
+      <NewFolderForm
+        spaceId={spaceId}
+        folderId={currentFolderId}
+      />
+    );
+  };
+
+  if (!spaceId) {
+    return <div className="folder-sidebar">Loading space...</div>;
+  }
 
   return (
     <div className="folder-sidebar">
-      <div className="folder-sidebar-header">
-        <h3 style={{ margin: 0 }}>My Personal Space</h3>
-        <div className="actions">
-          <MdCreateNewFolder className="action-icon" title="New Folder" onClick={handleNewFolder} />
-          <MdOutlineFileUpload className="action-icon" title="Upload Files" onClick={handleFileUpload} />
-          <IoMdAdd className="action-icon" title="New Snippet" onClick={handleNewSnippet} />
-        </div>
-      </div>
-
-      <input type="text" placeholder="Search..." style={{ width: '92%', padding: '8px', margin: '10px 0' }} />
+      <input type="text" placeholder="Search this space..." style={{width: '90%', padding: '8px'}}/>
       
-      {renderTree(tree)}
+      <div className="sidebar-actions">
+        <button onClick={handleNewSnippet}>
+          <FaPlus /> New Snippet
+        </button>
+        <button onClick={handleNewFolder}>
+          <FaPlus /> New Folder
+        </button>
+      </div>
+      
+      {loading && <p>Loading...</p>}
+
+      {/* TODO: Add a "Back" button if currentFolderId is not null */}
+
+      <h3 style={{marginTop: '20px'}}>Folders</h3>
+      <ul className="item-list">
+        {folders.map(folder => (
+          // TODO: Add onClick to set currentFolderId
+          <li key={folder.id}>
+            <FaFolder /> {folder.name}
+          </li>
+        ))}
+      </ul>
+
+      <h3>Snippets</h3>
+      <ul className="item-list">
+        {snippets.map(snippet => (
+          <li key={snippet.id} onClick={() => onSelectSnippet(snippet)}>
+            <FaFileCode /> {snippet.title}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

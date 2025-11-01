@@ -8,8 +8,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isSigningUp, setIsSigningUp] = useState(false); 
   
-  // 1. Get the new bypassLogin function
-  const { login, signup, bypassLogin } = useAuth();
+  const { login, signup } = useAuth(); // Bypass removed
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -27,12 +26,6 @@ const Login = () => {
       console.error("Firebase Auth Error:", err);
       setError(`Failed. (${err.code})`);
     }
-  };
-
-  // 2. Create a handler for the bypass button
-  const handleBypass = () => {
-    bypassLogin();
-    navigate('/');
   };
 
   return (
@@ -65,15 +58,6 @@ const Login = () => {
             ? 'Already have an account? Log In'
             : "Don't have an account? Sign Up"}
         </p>
-
-        {/* --- 3. ADD THIS BYPASS BUTTON --- */}
-        {/* This checks if you are in development mode */}
-        {import.meta.env.MODE === 'development' && (
-          <button type="button" className="bypass-button" onClick={handleBypass}>
-            Bypass Login (Dev)
-          </button>
-        )}
-        {/* ---------------------------------- */}
       </form>
     </div>
   );

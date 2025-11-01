@@ -1,7 +1,10 @@
 import { createContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth, db } from '../firebase'; 
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'; 
+import { auth } from '../firebase'; // We still need 'auth' for login/logout
+// 1. IMPORT YOUR NEW API FUNCTION
+import { registerUser } from '../api/serverApi';
+// 2. WE NO LONGER NEED FIRESTORE HERE
+//    (Remove imports for db, doc, setDoc, serverTimestamp)
 
 export const AuthContext = createContext();
 
@@ -10,49 +13,30 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const login = (email, password) => {
+    // Login is fine, it just gets a token
     return signInWithEmailAndPassword(auth, email, password);
   };
 
+  // 3. THIS IS THE NEW SIGNUP FUNCTION
   const signup = async (email, password) => {
-    // Step A: Create the user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    // Step A: Call our new backend route
+    await registerUser(email, password);
 
-    // Step B: Create their personal space in Firestore
-    const spaceRef = doc(db, "spaces", `personal_${user.uid}`);
-    await setDoc(spaceRef, {
-      name: "My Personal Space",
-      ownerId: user.uid,
-      members: [user.uid],
-      isPersonal: true,
-      createdAt: serverTimestamp()
-    });
-
-    return userCredential;
+    // Step B: After registration, log the user in
+    // to get their session and ID token.
+    return signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = () => {
     return signOut(auth);
   };
 
-  // --- ADD THIS BYPASS FUNCTION ---
-  const bypassLogin = () => {
-    // This creates a "mock" user object
-    // The UID is critical, as our app uses it to fetch data
-    const mockUser = {
-      uid: "DEV_USER_UID", // A fake ID
-      email: "dev@user.com"
-    };
-    setCurrentUser(mockUser);
-  };
-  // ---------------------------------
-
+  // ... (useEffect and the rest of the file are the same) ...
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 
@@ -60,8 +44,7 @@ export const AuthProvider = ({ children }) => {
     currentUser,
     login,
     signup,
-    logout,
-    bypassLogin // <-- ADD THIS
+    logout
   };
 
   return (

@@ -161,3 +161,99 @@ body {
   width: 400px;
   z-index: 1001;
 }
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #252526;
+  padding: 20px;
+  border-radius: 8px;
+  width: 600px;
+  max-width: 90%;
+  position: relative;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #d4d4d4;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* --- Form Styles --- */
+.new-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.new-item-form h3 {
+  margin-top: 0;
+}
+.new-item-form input {
+  padding: 10px;
+  border: 1px solid #444;
+  background: #333;
+  color: white;
+  border-radius: 4px;
+}
+.new-item-form button {
+  padding: 10px;
+  background-color: #0e639c;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* --- Folder Sidebar Action Buttons --- */
+.sidebar-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+.sidebar-actions button {
+  flex: 1;
+  padding: 8px;
+  background: #333;
+  color: #d4d4d4;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.sidebar-actions button:hover {
+  background: #444;
+}
+/* --- Space Sidebar Active Styles --- */
+.space-icon.active {
+  background-color: #0e639c; /* Blue */
+  border-radius: 12px;
+}
+
+.new-space-btn {
+  background-color: #333;
+  border: 1px dashed #5a5a5a;
+}
+.new-space-btn:hover {
+  border-radius: 12px;
+  background-color: #444;
+  border-style: solid;
+}

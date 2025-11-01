@@ -1,38 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { FaSignOutAlt, FaFire, FaUserPlus } from 'react-icons/fa'; // Added FaUserPlus
-import CollaboratorModal from './CollaboratorModal'; // We will create this
+import { getMySpaces, createTeamSpace } from '../api/serverApi'; // Use new API
+import { FaSignOutAlt, FaPlus } from 'react-icons/fa';
 
-const SpaceSidebar = () => {
-  const { logout } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const SpaceSidebar = ({ onSelectSpace, refreshKey, triggerRefresh }) => {
+  const { currentUser, logout } = useAuth();
+  const [spaces, setSpaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeSpaceId, setActiveSpaceId] = useState(null);
+
+  useEffect(() => {
+    if (currentUser) {
+      setLoading(true);
+      // We are now fetching, not listening in real-time
+      getMySpaces()
+        .then(data => {
+          setSpaces(data);
+          // If no space is active, select the first one
+          if (data.length > 0 && !activeSpaceId) {
+            const firstSpaceId = data[0].id;
+            setActiveSpaceId(firstSpaceId);
+            onSelectSpace(firstSpaceId);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error("Error fetching spaces:", err);
+          setLoading(false);
+          if (err.response?.status === 401) logout(); // Bad token, force logout
+        });
+    }
+  }, [currentUser, onSelectSpace, activeSpaceId, logout, refreshKey]); // Refresh when key changes
+
+  const handleCreateSpace = async () => {
+    const spaceName = prompt("Enter new space name:");
+    if (spaceName && currentUser) {
+      try {
+        await createTeamSpace(spaceName);
+        triggerRefresh(); // Tell layout to refresh all data
+      } catch (err) {
+        console.error("Error creating space:", err);
+        alert("Failed to create space.");
+      }
+    }
+  };
+  
+  const handleSelectSpace = (spaceId) => {
+    setActiveSpaceId(spaceId);
+    onSelectSpace(spaceId);
+  };
 
   return (
     <div className="space-sidebar">
-      {/* This will be your space switcher later */}
-      <div style={{ padding: '10px', cursor: 'pointer' }} title="Personal Space">
-        <FaFire size={28} />
+      {spaces.map(space => (
+        <div
+          key={space.id}
+          className={`space-icon ${space.id === activeSpaceId ? 'active' : ''}`}
+          title={space.name}
+          onClick={() => handleSelectSpace(space.id)}
+        >
+          {space.name.charAt(0).toUpperCase()}
+        </div>
+      ))}
+      
+      <div
+        className="space-icon new-space-btn"
+        title="Create New Space"
+        onClick={handleCreateSpace}
+      >
+        <FaPlus />
       </div>
       
-      {/* Add Collaborator Button */}
       <div 
-        style={{ padding: '10px', cursor: 'pointer', marginTop: '10px' }} 
-        title="Add Collaborator"
-        onClick={() => setIsModalOpen(true)}
+        className="space-icon" 
+        style={{ marginTop: 'auto' }} 
+        onClick={logout} 
+        title="Logout"
       >
-        <FaUserPlus size={24} />
+        <FaSignOutAlt size={24} />
       </div>
-
-      {/* Logout Button */}
-      <div style={{ marginTop: 'auto', padding: '20px', cursor: 'pointer' }} onClick={logout}>
-        <FaSignOutAlt size={24} title="Logout" />
-      </div>
-
-      {/* The Modal itself */}
-      <CollaboratorModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
     </div>
   );
 };
