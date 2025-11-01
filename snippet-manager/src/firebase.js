@@ -1,16 +1,20 @@
-import * as admin from "firebase-admin";
-import fs from "fs";
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-const serviceAccount = JSON.parse(
-  fs.readFileSync(
-    new URL(
-      "./code-snippet-manager-42498-firebase-adminsdk-fbsvc-b83c40299a.json",
-      import.meta.url
-    ),
-    "utf8"
-  )
-);
+// PASTE YOUR NEWLY COPIED CONFIG OBJECT HERE
+const firebaseConfig = {
+  apiKey: "AIzaSy...YOUR_REAL_KEY...",
+  authDomain: "snippet-manager-1234.firebaseapp.com",
+  projectId: "snippet-manager-1234",
+  storageBucket: "snippet-manager-1234.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abcdef123456"
+};
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Export the services you'll need
+export const auth = getAuth(app);
+export const db = getFirestore(app);

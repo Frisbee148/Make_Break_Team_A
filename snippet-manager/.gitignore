@@ -22,4 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+<<<<<<< HEAD
 code-snippet-manager-42498-firebase-adminsdk-fbsvc-b83c40299a.json
+=======
+>>>>>>> 144a7519b93c5111c92401610b371ec8a0b0ab7a
