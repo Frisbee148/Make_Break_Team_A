@@ -1,17 +1,11 @@
 import axios from 'axios';
-import { auth } from '../firebase'; // We still use this to get the current user
+import { auth } from '../firebase';
 
-// Your server's address
 const API_BASE_URL = 'http://localhost:5000/api';
 
-/**
- * A helper function to get the current user's auth token
- * and create the required headers for our backend.
- */
 const getAuthHeader = async () => {
   const user = auth.currentUser;
   if (!user) throw new Error('No user is logged in.');
-  
   const token = await user.getIdToken();
   return {
     headers: {
@@ -20,38 +14,54 @@ const getAuthHeader = async () => {
   };
 };
 
-// --- SPACE FUNCTIONS ---
+// --- AUTH ---
+export const registerUser = async (email, password) => {
+  const body = { email, password };
+  const response = await axios.post(`${API_BASE_URL}/auth/register`, body);
+  return response.data;
+};
 
+// --- SPACES ---
 export const getMySpaces = async () => {
   const config = await getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/spaces`, config);
-  return response.data; // Returns the [spaces] array
+  return response.data;
 };
 
 export const createTeamSpace = async (spaceName) => {
   const config = await getAuthHeader();
   const body = { name: spaceName };
   const response = await axios.post(`${API_BASE_URL}/spaces`, body, config);
-  return response.data; // Returns the {newSpace} object
+  return response.data;
 };
 
-// --- FOLDER FUNCTIONS (These were missing) ---
+// --- COLLABORATION ---
+export const searchUserByEmail = async (email) => {
+  const config = await getAuthHeader();
+  const response = await axios.get(`${API_BASE_URL}/users/search`, {
+    ...config,
+    params: { email }
+  });
+  return response.data; // Returns { uid, email }
+};
 
-/**
- * Gets folders. If 'folderId' is null, gets top-level folders.
- */
+export const addMemberToSpace = async (spaceId, newMemberUid) => {
+  const config = await getAuthHeader();
+  const body = { newMemberUid };
+  const response = await axios.post(`${API_BASE_URL}/spaces/${spaceId}/members`, body, config);
+  return response.data;
+};
+
+// --- FOLDERS ---
 export const getFolders = async (spaceId, folderId = null) => {
   const config = await getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/folders`, {
     ...config,
-    params: { spaceId, parentId: folderId } // Send as query params
+    params: { spaceId, parentId: folderId }
   });
   return response.data;
 };
 
-/**
- * Creates a new folder.
- */
 export const createFolder = async (name, spaceId, parentId = null) => {
   const config = await getAuthHeader();
   const body = { name, spaceId, parentId };
@@ -59,33 +69,18 @@ export const createFolder = async (name, spaceId, parentId = null) => {
   return response.data;
 };
 
-// --- SNIPPET FUNCTIONS (These were missing) ---
-
-/**
- * Gets snippets. If 'folderId' is null, gets top-level snippets.
- */
+// --- SNIPPETS ---
 export const getSnippets = async (spaceId, folderId = null) => {
   const config = await getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/snippets`, {
     ...config,
-    params: { spaceId, parentId: folderId } // Send as query params
+    params: { spaceId, parentId: folderId }
   });
   return response.data;
 };
-// --- ADD THIS NEW FUNCTION ---
-export const registerUser = async (email, password) => {
-  const body = { email, password };
-  // This is a public route, so it does NOT need an auth header
-  const response = await axios.post(`${API_BASE_URL}/auth/register`, body);
-  return response.data;
-}
 
-/**
- * Creates a new snippet.
- */
 export const createSnippet = async (data) => {
   const config = await getAuthHeader();
-  // 'data' is the object { title, content, language, tags, spaceId, parentId }
   const response = await axios.post(`${API_BASE_URL}/snippets`, data, config);
   return response.data;
 };

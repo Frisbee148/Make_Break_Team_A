@@ -257,3 +257,47 @@ body {
   background-color: #444;
   border-style: solid;
 }
+.back-button {
+  background: none;
+  border: 1px solid #555;
+  color: #d4d4d4;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-button:hover {
+  background: #333;
+}
+/* ... (all your existing styles) ... */
+
+/* ... (keep the .back-button style) ... */
+
+/* --- Folder Sidebar Header --- */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+.sidebar-header h3 {
+  margin: 0;
+  word-break: break-all;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  color: #d4d4d4;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+}
+.settings-btn:hover {
+  background: #444;
+}

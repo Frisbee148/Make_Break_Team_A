@@ -22,9 +22,9 @@ const NewSnippetForm = ({ spaceId, folderId = null, onClose }) => {
       title,
       content,
       language,
-      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag), // Clean tags
       spaceId: spaceId,
-      parentId: folderId,
+      parentId: folderId, // This is the key for hierarchy
     };
 
     try {

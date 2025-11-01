@@ -1,10 +1,7 @@
 import { createContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth } from '../firebase'; // We still need 'auth' for login/logout
-// 1. IMPORT YOUR NEW API FUNCTION
-import { registerUser } from '../api/serverApi';
-// 2. WE NO LONGER NEED FIRESTORE HERE
-//    (Remove imports for db, doc, setDoc, serverTimestamp)
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth } from '../firebase'; 
+import { registerUser } from '../api/serverApi'; // Use our new API function
 
 export const AuthContext = createContext();
 
@@ -13,17 +10,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const login = (email, password) => {
-    // Login is fine, it just gets a token
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  // 3. THIS IS THE NEW SIGNUP FUNCTION
+  // This function now calls our backend!
   const signup = async (email, password) => {
-    // Step A: Call our new backend route
+    // 1. Call backend to create user in Auth + their personal space in Firestore
     await registerUser(email, password);
-
-    // Step B: After registration, log the user in
-    // to get their session and ID token.
+    // 2. Now, log the new user in
     return signInWithEmailAndPassword(auth, email, password);
   };
 
@@ -31,7 +25,6 @@ export const AuthProvider = ({ children }) => {
     return signOut(auth);
   };
 
-  // ... (useEffect and the rest of the file are the same) ...
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);

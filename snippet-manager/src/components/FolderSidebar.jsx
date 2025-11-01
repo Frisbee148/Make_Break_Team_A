@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
-// Use the new server API
 import { getFolders, getSnippets } from '../api/serverApi';
-import { FaFileCode, FaFolder, FaPlus } from 'react-icons/fa';
+import { FaFileCode, FaFolder, FaPlus, FaArrowLeft, FaCog } from 'react-icons/fa'; // Added FaCog
 import NewSnippetForm from './NewSnippetForm';
-import NewFolderForm from './NewFolderForm'; // We will create this
+import NewFolderForm from './NewFolderForm';
 
-const FolderSidebar = ({ spaceId, onSelectSnippet, openModal, refreshKey }) => {
+const FolderSidebar = ({ space, onSelectSnippet, openModal, refreshKey, onOpenSettings }) => {
   const [folders, setFolders] = useState([]);
   const [snippets, setSnippets] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  // This will manage the current folder. For now, it's null (top-level)
-  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [currentFolder, setCurrentFolder] = useState(null); // { id, name }
 
   useEffect(() => {
-    if (spaceId) {
+    if (space) {
       setLoading(true);
-      // Fetch based on current space AND folder
-      const folderPromise = getFolders(spaceId, currentFolderId);
-      const snippetPromise = getSnippets(spaceId, currentFolderId);
+      const folderId = currentFolder ? currentFolder.id : null;
+      const spaceId = space.id;
+
+      const folderPromise = getFolders(spaceId, folderId);
+      const snippetPromise = getSnippets(spaceId, folderId);
 
       Promise.all([folderPromise, snippetPromise])
         .then(([folderData, snippetData]) => {
@@ -31,13 +30,13 @@ const FolderSidebar = ({ spaceId, onSelectSnippet, openModal, refreshKey }) => {
           setLoading(false);
         });
     }
-  }, [spaceId, currentFolderId, refreshKey]); // Refresh on key change
+  }, [space, currentFolder, refreshKey]); // Re-fetch when space or folder changes
 
   const handleNewSnippet = () => {
     openModal(
       <NewSnippetForm 
-        spaceId={spaceId} 
-        folderId={currentFolderId} 
+        spaceId={space.id} 
+        folderId={currentFolder ? currentFolder.id : null} 
       />
     );
   };
@@ -45,44 +44,56 @@ const FolderSidebar = ({ spaceId, onSelectSnippet, openModal, refreshKey }) => {
   const handleNewFolder = () => {
     openModal(
       <NewFolderForm
-        spaceId={spaceId}
-        folderId={currentFolderId}
+        spaceId={space.id}
+        folderId={currentFolder ? currentFolder.id : null}
       />
     );
   };
 
-  if (!spaceId) {
+  if (!space) {
     return <div className="folder-sidebar">Loading space...</div>;
   }
 
   return (
     <div className="folder-sidebar">
+      <div className="sidebar-header">
+        <h3 style={{ flex: 1 }}>{space.name}</h3>
+        {/* Settings button, only show for non-personal spaces */}
+        {!space.isPersonal && (
+          <button className="settings-btn" onClick={onOpenSettings}>
+            <FaCog />
+          </button>
+        )}
+      </div>
+
       <input type="text" placeholder="Search this space..." style={{width: '90%', padding: '8px'}}/>
       
       <div className="sidebar-actions">
-        <button onClick={handleNewSnippet}>
-          <FaPlus /> New Snippet
-        </button>
-        <button onClick={handleNewFolder}>
-          <FaPlus /> New Folder
-        </button>
+        <button onClick={handleNewSnippet}><FaPlus /> New Snippet</button>
+        <button onClick={handleNewFolder}><FaPlus /> New Folder</button>
       </div>
       
       {loading && <p>Loading...</p>}
 
-      {/* TODO: Add a "Back" button if currentFolderId is not null */}
+      {currentFolder && (
+        <button className="back-button" onClick={() => setCurrentFolder(null)}>
+          <FaArrowLeft /> Back to Top
+        </button>
+      )}
 
-      <h3 style={{marginTop: '20px'}}>Folders</h3>
+      <h4 style={{marginTop: '20px'}}>
+        {currentFolder ? currentFolder.name : 'Top Level'}
+      </h4>
+      
       <ul className="item-list">
         {folders.map(folder => (
-          // TODO: Add onClick to set currentFolderId
-          <li key={folder.id}>
+          <li key={folder.id} onClick={() => setCurrentFolder(folder)}>
             <FaFolder /> {folder.name}
           </li>
         ))}
       </ul>
 
-      <h3>Snippets</h3>
+      <h4>Snippets</h4>
       <ul className="item-list">
         {snippets.map(snippet => (
           <li key={snippet.id} onClick={() => onSelectSnippet(snippet)}>

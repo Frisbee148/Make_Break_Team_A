@@ -3,16 +3,15 @@ import SpaceSidebar from './SpaceSidebar';
 import FolderSidebar from './FolderSidebar';
 import Editor from './Editor';
 import Modal from './Modal';
+import SpaceSettings from './SpaceSettings'; // Import the new settings component
 
 const Layout = () => {
-  const [selectedSpaceId, setSelectedSpaceId] = useState(null);
-  const [selectedFolderId, setSelectedFolderId] = useState(null); // Keep track of current folder
+  const [selectedSpace, setSelectedSpace] = useState(null); // Store the whole space object
   const [selectedSnippet, setSelectedSnippet] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   
-  // This state is the key to refreshing our data
   const [refreshKey, setRefreshKey] = useState(0);
   const triggerRefresh = () => setRefreshKey(key => key + 1);
 
@@ -26,28 +25,36 @@ const Layout = () => {
     setModalContent(null);
   };
 
+  // This function will be passed to the FolderSidebar
+  const handleOpenSettings = () => {
+    if (!selectedSpace) return;
+    openModal(
+      <SpaceSettings space={selectedSpace} />
+    );
+  };
+
   return (
     <>
       <div className="app-layout">
         <SpaceSidebar 
-          onSelectSpace={setSelectedSpaceId}
-          refreshKey={refreshKey} // Pass the key down
-          triggerRefresh={triggerRefresh} // Pass the function down
+          onSelectSpace={setSelectedSpace} // Pass the full space object
+          refreshKey={refreshKey}
+          triggerRefresh={triggerRefresh}
         />
         
         <FolderSidebar 
-          spaceId={selectedSpaceId} 
+          space={selectedSpace} // Pass the full space object
           onSelectSnippet={setSelectedSnippet}
           openModal={openModal}
           triggerRefresh={triggerRefresh}
           refreshKey={refreshKey}
+          onOpenSettings={handleOpenSettings} // Pass the settings handler
         />
         
         <Editor snippet={selectedSnippet} />
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal}>
-        {/* We pass 'triggerRefresh' to the form */}
         {modalContent && React.cloneElement(modalContent, {
           onClose: () => {
             closeModal();

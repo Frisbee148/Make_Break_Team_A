@@ -12,6 +12,7 @@ const NewFolderForm = ({ spaceId, folderId = null, onClose }) => {
     }
 
     try {
+      // Pass the name, spaceId, and parentId to the API
       await createFolder(name, spaceId, folderId);
       onClose(); // Close modal and trigger refresh
     } catch (err) {
