@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { createSnippet } from '../api/serverApi'; // Use new API
+import { createFile } from '../api/serverApi'; // Renamed
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { okaidia } from '@uiw/codemirror-theme-okaidia';
 
-// 'onClose' will be passed by the Modal
-const NewSnippetForm = ({ spaceId, folderId = null, onClose }) => {
+const NewFileForm = ({ spaceId, folderId = null, onClose }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [language, setLanguage] = useState('javascript');
@@ -22,26 +21,26 @@ const NewSnippetForm = ({ spaceId, folderId = null, onClose }) => {
       title,
       content,
       language,
-      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag), // Clean tags
+      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
       spaceId: spaceId,
-      parentId: folderId, // This is the key for hierarchy
+      parentId: folderId,
     };
 
     try {
-      await createSnippet(data); // Call server API
-      onClose(); // Close the modal (this also triggers a refresh)
+      await createFile(data); // Renamed
+      onClose();
     } catch (err) {
-      console.error("Error creating snippet:", err);
-      alert("Failed to create snippet");
+      console.error("Error creating file:", err);
+      alert("Failed to create file");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="new-item-form">
-      <h3>New Code Snippet</h3>
+      <h3>New Code File</h3>
       <input
         type="text"
-        placeholder="Snippet title (e.g., 'myFunction.js')"
+        placeholder="File title (e.g., 'myFunction.js')"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -64,9 +63,9 @@ const NewSnippetForm = ({ spaceId, folderId = null, onClose }) => {
         extensions={[javascript({ jsx: true })]}
         onChange={(value) => setContent(value)}
       />
-      <button type="submit">Create Snippet</button>
+      <button typeS="submit">Create File</button>
     </form>
   );
 };
 
-export default NewSnippetForm;
+export default NewFileForm;

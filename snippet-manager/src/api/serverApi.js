@@ -1,12 +1,11 @@
 import axios from 'axios';
-import { auth } from '../firebase';
+import { auth } from '../firebase'; // This is just for the login/logout functions
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
-const getAuthHeader = async () => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('No user is logged in.');
-  const token = await user.getIdToken();
+const getAuthHeader = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) throw new Error('No auth token found. Please log in.');
   return {
     headers: {
       Authorization: `Bearer ${token}`
@@ -21,15 +20,27 @@ export const registerUser = async (email, password) => {
   return response.data;
 };
 
+export const loginUser = async (email, password) => {
+  const body = { email, password };
+  const response = await axios.post(`${API_BASE_URL}/auth/login`, body);
+  return response.data;
+};
+
+export const getMe = async () => {
+  const config = getAuthHeader();
+  const response = await axios.get(`${API_BASE_URL}/users/me`, config);
+  return response.data;
+};
+
 // --- SPACES ---
 export const getMySpaces = async () => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/spaces`, config);
   return response.data;
 };
 
 export const createTeamSpace = async (spaceName) => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const body = { name: spaceName };
   const response = await axios.post(`${API_BASE_URL}/spaces`, body, config);
   return response.data;
@@ -37,16 +48,16 @@ export const createTeamSpace = async (spaceName) => {
 
 // --- COLLABORATION ---
 export const searchUserByEmail = async (email) => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/users/search`, {
     ...config,
     params: { email }
   });
-  return response.data; // Returns { uid, email }
+  return response.data;
 };
 
 export const addMemberToSpace = async (spaceId, newMemberUid) => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const body = { newMemberUid };
   const response = await axios.post(`${API_BASE_URL}/spaces/${spaceId}/members`, body, config);
   return response.data;
@@ -54,7 +65,7 @@ export const addMemberToSpace = async (spaceId, newMemberUid) => {
 
 // --- FOLDERS ---
 export const getFolders = async (spaceId, folderId = null) => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const response = await axios.get(`${API_BASE_URL}/folders`, {
     ...config,
     params: { spaceId, parentId: folderId }
@@ -63,24 +74,32 @@ export const getFolders = async (spaceId, folderId = null) => {
 };
 
 export const createFolder = async (name, spaceId, parentId = null) => {
-  const config = await getAuthHeader();
+  const config = getAuthHeader();
   const body = { name, spaceId, parentId };
   const response = await axios.post(`${API_BASE_URL}/folders`, body, config);
   return response.data;
 };
 
-// --- SNIPPETS ---
-export const getSnippets = async (spaceId, folderId = null) => {
-  const config = await getAuthHeader();
-  const response = await axios.get(`${API_BASE_URL}/snippets`, {
+// --- FILES (formerly Snippets) ---
+export const getFiles = async (spaceId, folderId = null) => {
+  const config = getAuthHeader();
+  const response = await axios.get(`${API_BASE_URL}/files`, {
     ...config,
     params: { spaceId, parentId: folderId }
   });
   return response.data;
 };
 
-export const createSnippet = async (data) => {
-  const config = await getAuthHeader();
-  const response = await axios.post(`${API_BASE_URL}/snippets`, data, config);
+export const createFile = async (data) => {
+  const config = getAuthHeader();
+  const response = await axios.post(`${API_BASE_URL}/files`, data, config);
+  return response.data;
+};
+
+// --- NEW "SAVE" FUNCTION ---
+export const updateFile = async (fileId, content) => {
+  const config = getAuthHeader();
+  const body = { content };
+  const response = await axios.put(`${API_BASE_URL}/files/${fileId}`, body, config);
   return response.data;
 };

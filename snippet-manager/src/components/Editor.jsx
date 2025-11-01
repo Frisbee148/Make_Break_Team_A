@@ -1,76 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
-import { okaidia } from '@uiw/codemirror-theme-okaidia';
-
-// --- LANGUAGE DETECTOR & PACKS ---
-// 1. Import the base language (JS)
 import { javascript } from '@codemirror/lang-javascript';
-// 2. Import other languages you want to support
-import { python } from '@codemirror/lang-python';
-import { css } from '@codemirror/lang-css';
-import { html } from '@codemirror/lang-html';
-// You'll need to install these: 
-// npm install @codemirror/lang-python @codemirror/lang-css @codemirror/lang-html
+import { okaidia } from '@uiw/codemirror-theme-okaidia';
+import { updateFile } from '../api/serverApi'; // Import the new save function
 
-const Editor = () => {
-  // Mock data for the currently selected snippet
-  const [snippet, setSnippet] = useState({
-    title: 'useDebounce.js',
-    content: "function useDebounce(value, delay) {\n  // ...\n}",
-    language: 'javascript', // This will control the language pack
-    tags: ['react', 'hook', 'debounce'],
-    lastUpdated: '2 hours ago'
-  });
+const Editor = ({ file, triggerRefresh }) => {
+  const [content, setContent] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
-  const onChange = (value) => {
-    setSnippet(prev => ({ ...prev, content: value }));
-  };
+  // When the 'file' prop changes (user clicks a new file),
+  // update the local 'content' state.
+  useEffect(() => {
+    if (file) {
+      setContent(file.content);
+      setSaveMessage('');
+    }
+  }, [file]);
 
-  // --- LANGUAGE DETECTOR ---
-  // 3. This function selects the correct language pack based on snippet data
-  const getLanguageExtension = () => {
-    switch (snippet.language) {
-      case 'javascript':
-        return [javascript({ jsx: true })];
-      case 'python':
-        return [python()];
-      case 'css':
-        return [css()];
-      case 'html':
-        return [html()];
-      default:
-        return [javascript({ jsx: true })]; // Default to JS
+  const handleSave = async () => {
+    if (!file) return;
+
+    setIsSaving(true);
+    setSaveMessage('Saving...');
+    try {
+      await updateFile(file.id, content);
+      setIsSaving(false);
+      setSaveMessage('File saved successfully!');
+      triggerRefresh(); // Refresh sidebar in case name/etc changed (future)
+    } catch (err) {
+      console.error("Error saving file:", err);
+      setIsSaving(false);
+      setSaveMessage('Error saving file.');
     }
   };
 
+  if (!file) {
+    return (
+      <div className="editor-main">
+        <h2>Select a file to view or edit</h2>
+        <p>Or, click "New File" to create one.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="editor-main">
-      <h2>{snippet.title}</h2>
-      
-      {/* --- GITHUB-LIKE METADATA BAR --- */}
-      <div className="editor-metadata">
-        <span className="metadata-item">
-          <strong>Language:</strong> 
-          {/* --- LANGUAGE INDICATOR --- */}
-          <span className="language-indicator">{snippet.language}</span>
-        </span>
-        
-        <span className="metadata-item">
-          <strong>Tags:</strong> 
-          {snippet.tags.map(tag => <span key={tag} className="tag">{tag}</span>)}
-        </span>
-
-        <span className="metadata-item" style={{ marginLeft: 'auto' }}>
-          <strong>Last Updated:</strong> {snippet.lastUpdated}
-        </span>
+      <div className="editor-header">
+        <h2>{file.title}</h2>
+        <div className="editor-actions">
+          <span>{saveMessage}</span>
+          <button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save File'}
+          </button>
+        </div>
       </div>
       
+      <p>{file.description || "No description provided."}</p>
+      
       <CodeMirror
-        value={snippet.content}
-        height="70vh" // Increased height
+        value={content}
+        height="70vh"
         theme={okaidia}
-        extensions={getLanguageExtension()} // Use the dynamic language
-        onChange={onChange}
+        extensions={[javascript({ jsx: true })]}
+        onChange={(value) => setContent(value)} // Update local state on edit
+        readOnly={false} // It's now editable
       />
     </div>
   );

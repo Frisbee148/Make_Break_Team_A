@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 // --- DEVELOPMENT BYPASS ---
 // Set this to true to bypass login and go straight to the app.
 // !! IMPORTANT: Set this back to false before deploying to production.
-const DEV_BYPASS = true;
+const DEV_BYPASS = false;
 // --------------------------
 
 const ProtectedRoute = ({ children }) => {

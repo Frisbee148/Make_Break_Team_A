@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import SpaceSidebar from './SpaceSidebar';
-import FolderSidebar from './FolderSidebar';
+import Sidebar from './Sidebar'; // The new all-in-one sidebar
 import Editor from './Editor';
 import Modal from './Modal';
-import SpaceSettings from './SpaceSettings'; // Import the new settings component
+import SpaceSettings from './SpaceSettings';
+import NewFileForm from './NewFileForm';
+import NewFolderForm from './NewFolderForm';
 
 const Layout = () => {
-  const [selectedSpace, setSelectedSpace] = useState(null); // Store the whole space object
-  const [selectedSnippet, setSelectedSnippet] = useState(null);
-
+  const [selectedFile, setSelectedFile] = useState(null); // Renamed from snippet
+  const [currentSpace, setCurrentSpace] = useState(null); // We'll pass this down
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   
@@ -25,33 +27,48 @@ const Layout = () => {
     setModalContent(null);
   };
 
-  // This function will be passed to the FolderSidebar
+  // --- Handlers for the Sidebar ---
   const handleOpenSettings = () => {
-    if (!selectedSpace) return;
+    if (!currentSpace) return;
+    openModal(<SpaceSettings space={currentSpace} />);
+  };
+
+  const handleNewFile = () => {
     openModal(
-      <SpaceSettings space={selectedSpace} />
+      <NewFileForm 
+        spaceId={currentSpace.id} 
+        folderId={currentFolderId} 
+      />
+    );
+  };
+  
+  const handleNewFolder = () => {
+    openModal(
+      <NewFolderForm
+        spaceId={currentSpace.id}
+        folderId={currentFolderId}
+      />
     );
   };
 
   return (
     <>
-      <div className="app-layout">
-        <SpaceSidebar 
-          onSelectSpace={setSelectedSpace} // Pass the full space object
+      <div className="app-layout-2-column"> {/* New CSS class */}
+        <Sidebar 
+          onSelectFile={setSelectedFile}
+          onSelectSpace={setCurrentSpace}
+          onSelectFolder={setCurrentFolderId}
+          onOpenSettings={handleOpenSettings}
+          onNewFile={handleNewFile}
+          onNewFolder={handleNewFolder}
           refreshKey={refreshKey}
           triggerRefresh={triggerRefresh}
         />
         
-        <FolderSidebar 
-          space={selectedSpace} // Pass the full space object
-          onSelectSnippet={setSelectedSnippet}
-          openModal={openModal}
-          triggerRefresh={triggerRefresh}
-          refreshKey={refreshKey}
-          onOpenSettings={handleOpenSettings} // Pass the settings handler
+        <Editor 
+          file={selectedFile} // Renamed prop
+          triggerRefresh={triggerRefresh} 
         />
-        
-        <Editor snippet={selectedSnippet} />
       </div>
 
       <Modal isOpen={isModalOpen} onClose={closeModal}>
